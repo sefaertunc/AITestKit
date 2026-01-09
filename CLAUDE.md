@@ -59,6 +59,37 @@ src/aitestkit/
 - Test frameworks: pytest, Robot Framework, Playwright
 - Generated code must NOT contain: `time.sleep`, `TODO`, `pass  #`
 
+## Git Commit Convention
+
+Follow [Conventional Commits](https://www.conventionalcommits.org/) format:
+
+```
+<type>(<scope>): <description>
+
+[optional body]
+
+[optional footer]
+```
+
+**Types:**
+- `feat` - New feature
+- `fix` - Bug fix
+- `docs` - Documentation changes
+- `style` - Formatting (no code change)
+- `refactor` - Code restructuring (no feature/fix)
+- `test` - Adding/updating tests
+- `chore` - Maintenance tasks, dependencies
+
+**Examples:**
+```bash
+feat(generator): add playwright framework support
+fix(analyzer): handle empty log files gracefully
+docs: update CLAUDE.md with commit conventions
+refactor(cli): extract common options to decorator
+test(regression): add benchmark scenarios for auth flows
+chore: update anthropic dependency to 0.41.0
+```
+
 ## Environment Variables
 
 - `ANTHROPIC_API_KEY` - Required for Claude API access
