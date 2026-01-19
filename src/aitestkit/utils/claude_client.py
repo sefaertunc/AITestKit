@@ -14,6 +14,10 @@ class UsageStats:
     output_tokens: int = 0
     api_calls: int = 0
 
+    def __post_init__(self):
+        if self.input_tokens < 0 or self.output_tokens < 0 or self.api_calls < 0:
+            raise ValueError("Token counts and api_calls cannot be negative")
+
     # Pricing per 1M tokens (as of January 2025)
     # Source: https://www.anthropic.com/pricing
     PRICING = {
@@ -35,8 +39,9 @@ class UsageStats:
         """
         # Cost = (tokens / 1M) * price_per_1M
         # Using average across Opus 4.5, Sonnet 4.5, and Haiku 4.5
-        avg_input_price = (5.00 + 3.00 + 1.00) / 3
-        avg_output_price = (25.00 + 15.00 + 5.00) / 3
+        avg_input_price = (
+            self.PRICING["opus"]["input"] + self.PRICING["sonnet"]["input"] + self.PRICING["haiku"]["input"]) / 3
+        avg_output_price = (self.PRICING["opus"]["output"] + self.PRICING["sonnet"]["output"] + self.PRICING["haiku"]["output"]) / 3
         input_cost = (self.input_tokens / 1_000_000) * avg_input_price
         output_cost = (self.output_tokens / 1_000_000) * avg_output_price
         return input_cost + output_cost

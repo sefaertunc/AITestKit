@@ -1,6 +1,6 @@
 # AITestKit Master Specification
 ## AI-Powered Multi-Framework Test Generation Toolkit
-### Version 2.0 | January 11, 2026
+### Version 3.0 | January 19, 2026
 
 ---
 
@@ -11,13 +11,15 @@
 3. [Architecture Overview](#3-architecture-overview)
 4. [Feature Specification](#4-feature-specification)
 5. [Implementation Plan](#5-implementation-plan)
-6. [GitHub Actions](#6-github-actions)
-7. [Data Schemas](#7-data-schemas)
-8. [CLI Reference](#8-cli-reference)
-9. [Prompt System](#9-prompt-system)
-10. [Configuration](#10-configuration)
-11. [Testing Strategy](#11-testing-strategy)
-12. [Appendices](#appendices)
+6. [Error Handling](#6-error-handling)
+7. [Schema Versioning](#7-schema-versioning)
+8. [GitHub Actions](#8-github-actions)
+9. [Data Schemas](#9-data-schemas)
+10. [CLI Reference](#10-cli-reference)
+11. [Prompt System](#11-prompt-system)
+12. [Configuration](#12-configuration)
+13. [Testing Strategy](#13-testing-strategy)
+14. [Appendices](#appendices)
 
 ---
 
@@ -41,7 +43,9 @@ AITestKit envisions a future where QA engineers define *what* to test in natural
 | **Quality Generation** | Generate production-ready test code | 85%+ approval rate on first generation |
 | **Human-in-the-Loop** | Maintain human oversight on all AI output | 100% of generated code reviewed before use |
 | **Continuous Improvement** | Learn from rejections to improve prompts | Measurable score improvement over time |
-| **Zero Config Start** | Users can start with minimal setup | `pip install` + API key = working tool |
+| **Docker Distribution** | Consistent, isolated environment across all platforms | Docker install + API key = working tool |
+| **Structured Input** | Mandatory YAML scenarios for reproducible generation | Context-rich, version-controlled scenarios |
+| **Semantic Memory** | Memvid-based feedback storage for pattern learning | Dynamic few-shot selection from past generations |
 | **Framework Validation** | Auto-lint generated tests | Framework-specific linting on approval |
 
 ## 1.4 Target Users
@@ -252,6 +256,15 @@ aitestkit/                              # Package root
 │   ├── __init__.py                     # Package exports
 │   ├── cli.py                          # Click CLI entry point
 │   ├── config.py                       # Pydantic settings ✅ COMPLETE
+│   ├── errors.py                       # Error definitions
+│   │
+│   ├── scenario/                       # Scenario handling
+│   │   ├── __init__.py
+│   │   ├── loader.py                   # Load and parse YAML
+│   │   ├── validator.py                # Validation logic
+│   │   ├── migrator.py                 # Schema migration
+│   │   └── templates/
+│   │       └── default.yaml            # Scenario template
 │   │
 │   ├── frameworks/                     # Framework registry
 │   │   ├── __init__.py
@@ -260,9 +273,10 @@ aitestkit/                              # Package root
 │   │
 │   ├── generator/                      # Test generation
 │   │   ├── __init__.py
-│   │   ├── context_builder.py          # Build prompt context
+│   │   ├── context_builder.py          # Build prompt from scenario
 │   │   ├── output_parser.py            # Parse AI response
-│   │   └── generator.py                # Main generation logic
+│   │   ├── generator.py                # Orchestration
+│   │   └── scot.py                     # SCoT prompting
 │   │
 │   ├── analyzer/                       # Failure analysis
 │   │   ├── __init__.py
@@ -275,28 +289,52 @@ aitestkit/                              # Package root
 │   │   ├── runner.py                   # Run regression tests
 │   │   └── benchmarks/                 # Benchmark scenarios
 │   │
+│   ├── feedback/                       # Feedback system
+│   │   ├── __init__.py
+│   │   ├── storage.py                  # Memvid + JSON fallback
+│   │   └── patterns.py                 # Pattern detection
+│   │
+│   ├── memory/                         # Semantic memory
+│   │   ├── __init__.py
+│   │   ├── memvid_store.py             # Memvid database
+│   │   ├── embeddings.py               # Dual embedding
+│   │   └── retrieval.py                # CEDAR-style retrieval
+│   │
+│   ├── judge/                          # LLM-as-Judge
+│   │   ├── __init__.py
+│   │   └── validator.py                # Validation logic
+│   │
 │   ├── utils/
 │   │   ├── __init__.py
-│   │   └── claude_client.py            # Anthropic API wrapper
+│   │   ├── claude_client.py            # Anthropic API wrapper
+│   │   └── logging.py                  # Logging utilities
 │   │
 │   └── prompts/                        # Prompt templates
 │       ├── templates/
-│       │   ├── code-generation/
-│       │   │   ├── system.md           # System prompt
-│       │   │   ├── unit/               # Unit test templates
-│       │   │   ├── e2e/                # E2E test templates
-│       │   │   ├── bdd/                # BDD test templates
-│       │   │   ├── performance/        # Perf test templates
-│       │   │   ├── security/           # Security test templates
-│       │   │   └── api/                # API test templates
-│       │   └── failure_analysis/
-│       │       └── system.md
-│       ├── context/                    # Reusable context files
-│       ├── examples/                   # Few-shot examples
-│       └── benchmarks/                 # Regression benchmarks
+│       │   ├── system.md               # Base system prompt
+│       │   ├── scot/
+│       │   │   └── reasoning.md        # SCoT reasoning template
+│       │   └── frameworks/
+│       │       ├── pytest.md
+│       │       ├── playwright.md
+│       │       └── ...
+│       └── examples/                   # Few-shot examples
 │
-├── tests/                              # Production test suite
-├── dev_tests/                          # Development tests ✅ 7 passing
+├── tests/                              # Test suite
+│   ├── unit/                           # Pure function tests
+│   ├── integration/                    # Module interaction tests
+│   ├── ai_quality/                     # AI output quality tests
+│   └── conftest.py                     # Shared fixtures
+│
+├── scripts/                            # Docker wrapper scripts
+│   ├── aitestkit.sh                    # Linux/macOS
+│   ├── aitestkit.bat                   # Windows CMD
+│   ├── aitestkit.ps1                   # Windows PowerShell
+│   └── install.sh                      # Installation script
+│
+├── docker/
+│   └── Dockerfile                      # Container definition
+│
 ├── docs/
 │   ├── MASTER_SPEC.md                  # This document
 │   ├── BACKLOG.md                      # Feature backlog
@@ -305,6 +343,7 @@ aitestkit/                              # Package root
 ├── .github/
 │   └── workflows/
 │       ├── test.yml                    # CI: lint + test
+│       ├── docker.yml                  # Docker build + push
 │       ├── release.yml                 # Auto changelog + release notes
 │       ├── prompt-regression.yml       # Prompt quality gate
 │       └── lint-approved.yml           # Auto-lint approved tests
@@ -1449,9 +1488,241 @@ class OutputParser:
 
 ---
 
-# 6. GitHub Actions
+# 6. Error Handling
 
-## 6.1 Workflow Summary
+## 6.1 Error Categories
+
+```python
+# src/aitestkit/errors.py
+
+class AITestKitError(Exception):
+    """Base exception for all AITestKit errors."""
+    exit_code: int = 1
+
+class UserInputError(AITestKitError):
+    """User provided invalid input."""
+    exit_code = 2
+
+class ScenarioValidationError(UserInputError):
+    """Scenario YAML failed validation."""
+    def __init__(self, file: Path, errors: list[str]):
+        self.file = file
+        self.errors = errors
+
+class APIError(AITestKitError):
+    """Claude API error."""
+    exit_code = 3
+
+class APIAuthError(APIError):
+    """Invalid or missing API key."""
+
+class APIRateLimitError(APIError):
+    """Rate limit exceeded."""
+    retry_after: int
+
+class APITimeoutError(APIError):
+    """Request timed out."""
+
+class GenerationError(AITestKitError):
+    """Code generation failed."""
+    exit_code = 4
+
+class EmptyResponseError(GenerationError):
+    """AI returned empty or unparseable response."""
+
+class StorageError(AITestKitError):
+    """Storage operation failed."""
+    exit_code = 5
+
+class MemvidError(StorageError):
+    """Memvid database error."""
+```
+
+## 6.2 Exit Codes
+
+| Code | Meaning |
+|------|---------|
+| 0 | Success |
+| 1 | General error |
+| 2 | User input error |
+| 3 | API error |
+| 4 | Generation error |
+| 5 | Storage error |
+
+## 6.3 Error Handling Patterns
+
+**Pattern 1: Fail Fast on User Input**
+```python
+def load_scenario(path: Path) -> Scenario:
+    if not path.exists():
+        raise UserInputError(f"Scenario file not found: {path}")
+
+    try:
+        data = yaml.safe_load(path.read_text())
+    except yaml.YAMLError as e:
+        raise UserInputError(f"Invalid YAML syntax: {e}")
+
+    errors = validate_scenario(data)
+    if errors:
+        raise ScenarioValidationError(path, errors)
+
+    return Scenario(**data)
+```
+
+**Pattern 2: Retry with Backoff on API Errors**
+```python
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=1, min=2, max=30),
+    retry=retry_if_exception_type((APITimeoutError, APIRateLimitError)),
+)
+def call_claude(prompt: str) -> str:
+    try:
+        response = client.messages.create(...)
+        return response.content[0].text
+    except anthropic.RateLimitError as e:
+        raise APIRateLimitError(retry_after=e.retry_after)
+    except anthropic.APITimeoutError:
+        raise APITimeoutError("Request timed out")
+    except anthropic.AuthenticationError:
+        raise APIAuthError("Invalid ANTHROPIC_API_KEY")
+```
+
+**Pattern 3: Graceful Degradation on Storage Errors**
+```python
+def store_feedback(entry: FeedbackEntry) -> None:
+    try:
+        memvid_store(entry)
+    except MemvidError as e:
+        logger.warning(f"Memvid unavailable: {e}. Using JSON fallback.")
+        json_store(entry)
+```
+
+## 6.4 User-Facing Error Messages
+
+**Principles:**
+1. Say what happened
+2. Say why it matters
+3. Say how to fix it
+
+**Examples:**
+
+```
+✗ Scenario validation failed: scenarios/login.yaml
+
+  Missing required fields:
+    • target.description (minimum 20 characters)
+    • scenarios.failure (at least 1 required)
+
+  Run: aitestkit scenario validate scenarios/login.yaml --verbose
+  Docs: https://aitestkit.dev/docs/scenario-format
+```
+
+```
+✗ Claude API rate limit exceeded
+
+  You've hit the API rate limit. Retry in 45 seconds.
+
+  Tip: Use --thorough sparingly, it makes 2 API calls.
+
+  [Auto-retrying in 45s... Press Ctrl+C to cancel]
+```
+
+```
+⚠ Memvid storage unavailable, using JSON fallback
+
+  Could not write to .aitestkit/memory/feedback.mv
+  Error: Permission denied
+
+  Generation will continue. Feedback stored in:
+    .aitestkit/memory/exports/feedback.json
+```
+
+---
+
+# 7. Schema Versioning
+
+## 7.1 Version Field
+
+Every YAML file includes `schema_version` as the first line:
+
+```yaml
+schema_version: 1  # Always first line
+
+target:
+  feature: "Login"
+  ...
+```
+
+## 7.2 Version Lifecycle
+
+```
+v1.0: schema_version: 1 introduced (current)
+v1.5: schema_version: 2 introduced
+      → v1 shows deprecation warning
+v2.0: schema_version: 1 no longer supported
+      → Migration required
+```
+
+## 7.3 Migration Tool
+
+```bash
+# Migrate single file
+aitestkit scenario migrate scenarios/login.yaml
+
+# Migrate all files
+aitestkit scenario migrate scenarios/*.yaml
+
+# Preview changes without writing
+aitestkit scenario migrate scenarios/*.yaml --dry-run
+```
+
+**Behavior:**
+- Detects current schema version
+- Transforms to latest schema
+- Creates backup as `*.yaml.bak`
+- Reports changes made
+
+## 7.4 Deprecation Warning Example
+
+```
+$ aitestkit generate -s scenarios/login.yaml -f pytest
+
+⚠ Schema version 1 is deprecated. Will stop working in v2.0.
+  Run: aitestkit scenario migrate scenarios/login.yaml
+
+Proceeding with generation...
+```
+
+## 7.5 Implementation
+
+```python
+CURRENT_SCHEMA_VERSION = 1
+DEPRECATED_VERSIONS = []  # Will add 1 when 2 is released
+UNSUPPORTED_VERSIONS = []  # Will add 1 when it's removed
+
+def check_schema_version(data: dict, file: Path) -> None:
+    version = data.get("schema_version", 1)
+
+    if version in UNSUPPORTED_VERSIONS:
+        raise ScenarioValidationError(
+            file,
+            [f"Schema version {version} is no longer supported. "
+             f"Run: aitestkit scenario migrate {file}"]
+        )
+
+    if version in DEPRECATED_VERSIONS:
+        console.print(
+            f"[yellow]⚠ Schema version {version} is deprecated.[/yellow]\n"
+            f"  Run: aitestkit scenario migrate {file}"
+        )
+```
+
+---
+
+# 8. GitHub Actions
+
+## 8.1 Workflow Summary
 
 | Workflow | File | Trigger | Purpose |
 |----------|------|---------|---------|
@@ -1460,7 +1731,7 @@ class OutputParser:
 | **Prompt Regression** | `prompt-regression.yml` | PR to prompts/** | Quality gate |
 | **Lint Approved** | `lint-approved.yml` | Push with approved.json | Auto-lint |
 
-## 6.2 CI Tests Workflow
+## 8.2CI Tests Workflow
 
 ```yaml
 # .github/workflows/test.yml
@@ -1509,7 +1780,7 @@ jobs:
           files: ./coverage.xml
 ```
 
-## 6.3 Release Workflow
+## 8.3Release Workflow
 
 ```yaml
 # .github/workflows/release.yml
@@ -1568,7 +1839,7 @@ jobs:
           git push
 ```
 
-## 6.4 Prompt Regression Workflow
+## 8.4Prompt Regression Workflow
 
 ```yaml
 # .github/workflows/prompt-regression.yml
@@ -1648,7 +1919,7 @@ jobs:
             });
 ```
 
-## 6.5 Lint Approved Workflow
+## 8.5Lint Approved Workflow
 
 ```yaml
 # .github/workflows/lint-approved.yml
@@ -1710,9 +1981,9 @@ jobs:
 
 ---
 
-# 7. Data Schemas
+# 9. Data Schemas
 
-## 7.1 Feedback Schemas
+## 9.1Feedback Schemas
 
 ### pending.json
 
@@ -1884,7 +2155,7 @@ jobs:
 }
 ```
 
-## 7.2 History Schema
+## 9.2History Schema
 
 ### generations.json
 
@@ -1920,7 +2191,7 @@ jobs:
 }
 ```
 
-## 7.3 Benchmark Schema
+## 9.3Benchmark Schema
 
 ### benchmark_scenario.yaml
 
@@ -1993,49 +2264,122 @@ baseline_score: 85
 
 ---
 
-# 8. CLI Reference
+# 10. CLI Reference
 
-## 8.1 Command Overview
+## 10.1 Command Overview
 
 ```
 aitestkit [OPTIONS] COMMAND [ARGS]...
 
 Commands:
-  generate    Generate test code from natural language scenario
+  scenario    Manage scenario YAML files
+  generate    Generate test code from scenario file
   feedback    Submit review feedback for generated tests
   analyze     Analyze test failure logs
   regression  Run prompt regression tests
   frameworks  List supported testing frameworks
+  memory      Manage semantic memory
   info        Show current configuration
   init        Initialize AITestKit in current project
 ```
 
-## 8.2 generate
+## 10.2 scenario
 
 ```
-aitestkit generate [OPTIONS] SCENARIO
+aitestkit scenario [COMMAND] [OPTIONS] [ARGS]...
 
-Generate test code from natural language scenario.
+Manage scenario YAML files.
+
+Commands:
+  init        Create a new scenario file from template
+  validate    Validate scenario file(s)
+  migrate     Migrate scenario file(s) to latest schema version
+```
+
+### scenario init
+
+```
+aitestkit scenario init [OPTIONS] FILENAME
+
+Create a new scenario file from template.
 
 Arguments:
-  SCENARIO  Natural language description of the test scenario [required]
+  FILENAME  Name for the new scenario file [default: scenario.yaml]
 
 Options:
-  -f, --framework TEXT  Target testing framework [default: pytest]
-  -o, --output PATH     Output file path [default: ./generated/<auto>]
-  --context PATH        Additional context file(s) to include
+  -d, --dir PATH        Directory to create the file in [default: ./scenarios]
+  --help               Show this message and exit
+
+Examples:
+  aitestkit scenario init auth_login.yaml
+  aitestkit scenario init -d tests/scenarios checkout.yaml
+```
+
+### scenario validate
+
+```
+aitestkit scenario validate [OPTIONS] FILES...
+
+Validate scenario file(s).
+
+Arguments:
+  FILES  Scenario file(s) to validate [required]
+
+Options:
+  --verbose            Show detailed validation output
+  --help               Show this message and exit
+
+Examples:
+  aitestkit scenario validate scenarios/auth_login.yaml
+  aitestkit scenario validate scenarios/*.yaml
+```
+
+### scenario migrate
+
+```
+aitestkit scenario migrate [OPTIONS] FILES...
+
+Migrate scenario file(s) to latest schema version.
+
+Arguments:
+  FILES  Scenario file(s) to migrate [required]
+
+Options:
+  --dry-run            Preview changes without writing
+  --no-backup          Don't create .bak backup files
+  --help               Show this message and exit
+
+Examples:
+  aitestkit scenario migrate scenarios/auth_login.yaml
+  aitestkit scenario migrate scenarios/*.yaml --dry-run
+```
+
+## 10.3 generate
+
+```
+aitestkit generate [OPTIONS]
+
+Generate test code from scenario file.
+
+Options:
+  -s, --scenario PATH   Scenario YAML file [required]
+  -f, --framework TEXT  Target framework [default: from project.yaml]
+  -o, --output PATH     Output file path [default: from scenario/project]
   --dry-run            Show generated code without saving
-  --no-record          Don't record in generation history
+  --thorough           Use Sonnet→Opus pipeline (+40% cost)
+  --validate           Use Opus→Haiku validation (+17% cost)
+  --full               Use Sonnet→Opus→Haiku pipeline (+67% cost)
   -v, --verbose        Show detailed output
   --help               Show this message and exit
 
 Examples:
-  aitestkit generate "Test user login with valid credentials" -f pytest
-  aitestkit generate "Test API rate limiting" -f httpx --dry-run
-  aitestkit generate "Test shopping cart checkout" -f playwright-py -o tests/e2e/
+  aitestkit generate -s scenarios/auth_login.yaml
+  aitestkit generate -s scenarios/auth_login.yaml -f pytest --dry-run
+  aitestkit generate -s scenarios/checkout.yaml --thorough
+  aitestkit generate -s scenarios/security.yaml --full
 ```
 
-## 8.3 feedback
+## 10.4 feedback
 
 ```
 aitestkit feedback [OPTIONS] COMMAND [ARGS]...
@@ -2045,6 +2389,7 @@ Submit review feedback for generated tests.
 Commands:
   approve  Approve a generated test file
   reject   Reject a generated test file with reason
+  list     List pending reviews
 
 Options:
   --help  Show this message and exit
@@ -2064,7 +2409,7 @@ Options:
   --help  Show this message and exit
 
 Example:
-  aitestkit feedback approve generated/test_login.py
+  aitestkit feedback approve tests/generated/test_login.py
 ```
 
 ### feedback reject
@@ -2088,12 +2433,23 @@ Categories:
   wrong_framework_usage, other
 
 Example:
-  aitestkit feedback reject generated/test_login.py \
+  aitestkit feedback reject tests/generated/test_login.py \
     --reason "Missing test for password reset" \
     --category missing_edge_cases
 ```
 
-## 8.4 analyze
+### feedback list
+
+```
+aitestkit feedback list [OPTIONS]
+
+List pending reviews.
+
+Options:
+  --help  Show this message and exit
+```
+
+## 10.5 analyze
 
 ```
 aitestkit analyze [OPTIONS] LOG_FILE
@@ -2112,7 +2468,7 @@ Example:
   aitestkit analyze test_results.log -o analysis.md --format markdown
 ```
 
-## 8.5 regression
+## 10.6 regression
 
 ```
 aitestkit regression [OPTIONS]
@@ -2131,10 +2487,10 @@ Options:
 Example:
   aitestkit regression --all --output report.json
   aitestkit regression --category unit
-  aitestkit regression --prompt src/aitestkit/prompts/templates/unit/pytest.md
+  aitestkit regression --prompt src/aitestkit/prompts/templates/frameworks/pytest.md
 ```
 
-## 8.6 frameworks
+## 10.7 frameworks
 
 ```
 aitestkit frameworks [OPTIONS]
@@ -2154,7 +2510,95 @@ Example:
   aitestkit frameworks --language Python --priority 0
 ```
 
-## 8.7 info
+## 10.8 memory
+
+```
+aitestkit memory [COMMAND] [OPTIONS]
+
+Manage semantic memory (Memvid database).
+
+Commands:
+  init     Initialize memory database
+  stats    Show memory statistics
+  search   Search past generations
+  export   Export memory to JSON
+  rebuild  Rebuild memory from JSON
+
+Options:
+  --help  Show this message and exit
+```
+
+### memory init
+
+```
+aitestkit memory init [OPTIONS]
+
+Initialize memory database. Called automatically on first generation.
+
+Options:
+  --help  Show this message and exit
+```
+
+### memory stats
+
+```
+aitestkit memory stats [OPTIONS]
+
+Show memory statistics.
+
+Options:
+  --help  Show this message and exit
+
+Output includes:
+  - Total generations stored
+  - Approved/rejected counts
+  - Pattern count
+  - Database size
+```
+
+### memory search
+
+```
+aitestkit memory search [OPTIONS] QUERY
+
+Search past generations semantically.
+
+Arguments:
+  QUERY  Search query [required]
+
+Options:
+  -n, --limit INTEGER   Maximum results [default: 10]
+  --help               Show this message and exit
+
+Example:
+  aitestkit memory search "login authentication"
+```
+
+### memory export
+
+```
+aitestkit memory export [OPTIONS]
+
+Export memory to JSON for backup or portability.
+
+Options:
+  -o, --output PATH     Output directory [default: .aitestkit/memory/exports/]
+  --help               Show this message and exit
+```
+
+### memory rebuild
+
+```
+aitestkit memory rebuild [OPTIONS]
+
+Rebuild memory database from JSON exports.
+
+Options:
+  --from PATH           Source directory [default: .aitestkit/memory/exports/]
+  --help               Show this message and exit
+```
+
+## 10.9 info
 
 ```
 aitestkit info [OPTIONS]
@@ -2172,7 +2616,7 @@ Output includes:
   - Project initialization status
 ```
 
-## 8.8 init
+## 10.10 init
 
 ```
 aitestkit init [OPTIONS]
@@ -2185,21 +2629,26 @@ Options:
 
 Creates:
   .aitestkit/
-  ├── config.yaml
+  ├── project.yaml          # Product-level defaults
   ├── feedback/
   │   ├── pending.json
   │   ├── approved.json
   │   ├── rejected.json
   │   └── patterns.json
-  └── history/
-      └── generations.json
+  ├── history/
+  │   └── generations.json
+  ├── memory/
+  │   ├── feedback.mv       # Memvid database
+  │   └── exports/          # JSON fallback
+  └── logs/
+      └── aitestkit.log
 ```
 
 ---
 
-# 9. Prompt System
+# 11. Prompt System
 
-## 9.1 Prompt Structure (CTCO Framework)
+## 11.1Prompt Structure (CTCO Framework)
 
 All prompts follow the **Context-Task-Constraints-Output** (CTCO) framework:
 
@@ -2236,7 +2685,7 @@ All prompts follow the **Context-Task-Constraints-Output** (CTCO) framework:
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
-## 9.2 System Prompt Template
+## 11.2System Prompt Template
 
 ```markdown
 # Context
@@ -2289,7 +2738,7 @@ Required sections:
 Format: Return ONLY the code, wrapped in ```{language} code blocks.
 ```
 
-## 9.3 Framework-Specific Prompts
+## 11.3Framework-Specific Prompts
 
 Located in `prompts/templates/code-generation/{category}/{framework}.md`
 
@@ -2299,7 +2748,7 @@ Each extends the system prompt with framework-specific:
 - Assertion styles
 - Configuration requirements
 
-## 9.4 Prompt Versioning
+## 11.4Prompt Versioning
 
 Prompts are version-controlled in Git. Changes tracked via:
 
@@ -2320,9 +2769,9 @@ Prompts are version-controlled in Git. Changes tracked via:
 
 ---
 
-# 10. Configuration
+# 12. Configuration
 
-## 10.1 Environment Variables
+## 12.1 Environment Variables
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
@@ -2332,63 +2781,78 @@ Prompts are version-controlled in Git. Changes tracked via:
 | `AITESTKIT_MODEL_REGRESSION` | No | claude-haiku-4-5-20251001 | Regression model |
 | `AITESTKIT_MAX_TOKENS` | No | 4096 | Max tokens per request |
 | `AITESTKIT_TEMPERATURE` | No | 0.3 | Generation temperature |
-| `AITESTKIT_OUTPUT_DIR` | No | ./generated | Default output directory |
+| `AITESTKIT_LOG_LEVEL` | No | INFO | Logging level (DEBUG, INFO, WARNING, ERROR) |
 
-## 10.2 Project Configuration (.aitestkit/config.yaml)
+## 12.2 Project Configuration (.aitestkit/project.yaml)
 
 ```yaml
-# .aitestkit/config.yaml
-# Project-level configuration overrides
+# .aitestkit/project.yaml
+# Product-level defaults (written once per project)
 
-# Framework defaults
-default_framework: pytest
+schema_version: 1
 
-# Output settings
-output_dir: ./tests/generated
-auto_lint: true
+product:
+  name: "Acme Web Store"
+  type: web_app  # web_app | api | desktop | mobile | cli
+  tech_stack:
+    - python
+    - fastapi
+    - postgresql
+    - redis
+
+defaults:
+  framework: pytest
+  output_dir: tests/generated
+
+generation:
+  warn_after_n: 10  # Warn user after N generations (rate limiting)
 
 # Model overrides (optional)
 models:
   code_generation: claude-opus-4-5-20251101
   analysis: claude-sonnet-4-5-20250929
   regression: claude-haiku-4-5-20251001
-
-# Generation settings
-generation:
-  max_tokens: 4096
-  temperature: 0.3
-  include_examples: true
-  example_count: 2
-
-# Feedback settings
-feedback:
-  require_reason_on_reject: true
-  pattern_threshold: 3  # rejections before pattern is identified
-
-# Context files to always include
-default_context:
-  - ./docs/api_spec.yaml
-  - ./docs/test_standards.md
 ```
 
-## 10.3 Zero-Config Philosophy
+## 12.3 Docker Distribution
 
-AITestKit is designed to work with **minimal configuration**:
+AITestKit is distributed exclusively via Docker for consistent, isolated environments across all platforms.
 
-1. **Install:** `pip install aitestkit`
-2. **Set API key:** `export ANTHROPIC_API_KEY=sk-...`
-3. **Use:** `aitestkit generate "Test user login" -f pytest`
+**Installation:**
+```bash
+# Linux/macOS
+curl -fsSL https://raw.githubusercontent.com/sefaertunc/aitestkit/main/scripts/install.sh | bash
 
-Optional enhancements:
-- Run `aitestkit init` for project structure
-- Create `.aitestkit/config.yaml` for team settings
-- Add context files for domain-specific knowledge
+# Windows (PowerShell as Admin)
+irm https://raw.githubusercontent.com/sefaertunc/aitestkit/main/scripts/install.ps1 | iex
+```
+
+**Usage:**
+```bash
+# Set API key
+export ANTHROPIC_API_KEY=sk-ant-...
+
+# Use (identical to native CLI)
+aitestkit generate -s scenarios/login.yaml -f pytest
+```
+
+**Volume Mounts:**
+| Host Path | Container Path | Purpose |
+|-----------|----------------|---------|
+| `$(pwd)` | `/workspace` | User's project |
+| `~/.aitestkit` | `/home/aitestkit/.aitestkit` | Persistent config/memory |
+
+**Why Docker-Only?**
+- Eliminates Windows Python setup complexity
+- Guarantees dependency isolation
+- Clean updates via `docker pull`
+- Identical behavior across all platforms
 
 ---
 
-# 11. Testing Strategy
+# 13. Testing Strategy
 
-## 11.1 Test Categories
+## 13.1 Test Categories
 
 | Category | Location | Purpose | CI Trigger |
 |----------|----------|---------|------------|
@@ -2397,7 +2861,7 @@ Optional enhancements:
 | **Dev Tests** | `dev_tests/` | Development-time validation | Manual |
 | **E2E** | `tests/e2e/` | Full workflow tests | Pre-release |
 
-## 11.2 Test Coverage Requirements
+## 13.2 Test Coverage Requirements
 
 | Module | Minimum Coverage | Priority |
 |--------|------------------|----------|
@@ -2411,7 +2875,7 @@ Optional enhancements:
 
 **Overall target:** 80% coverage
 
-## 11.3 Mocking Strategy
+## 13.3 Mocking Strategy
 
 All tests that would call the Claude API must be mocked:
 
@@ -2427,7 +2891,7 @@ def mock_anthropic(mocker):
     return mock_client
 ```
 
-## 11.4 Test Fixtures
+## 13.4 Test Fixtures
 
 Standard fixtures in `conftest.py`:
 
@@ -2497,30 +2961,39 @@ def sample_log() -> str:
 ## Appendix D: Quick Start Guide
 
 ```bash
-# 1. Install
-pip install aitestkit
+# 1. Install (Docker-based)
+curl -fsSL https://raw.githubusercontent.com/sefaertunc/aitestkit/main/scripts/install.sh | bash
 
 # 2. Set API key
 export ANTHROPIC_API_KEY=sk-ant-...
 
-# 3. Generate a test
-aitestkit generate "Test user registration with email validation" -f pytest
-
-# 4. Review the generated file
-cat generated/test_user_registration.py
-
-# 5. Approve or reject
-aitestkit feedback approve generated/test_user_registration.py
-# OR
-aitestkit feedback reject generated/test_user_registration.py --reason "Missing edge case for invalid email"
-
-# 6. (Optional) Initialize project structure
+# 3. Initialize project
 aitestkit init
 
-# 7. View available frameworks
+# 4. Create a scenario file
+aitestkit scenario init auth_login.yaml
+# Edit scenarios/auth_login.yaml with your test scenarios
+
+# 5. Validate the scenario
+aitestkit scenario validate scenarios/auth_login.yaml
+
+# 6. Generate a test
+aitestkit generate -s scenarios/auth_login.yaml -f pytest
+
+# 7. Review the generated file
+cat tests/generated/test_auth_login.py
+
+# 8. Approve or reject
+aitestkit feedback approve tests/generated/test_auth_login.py
+# OR
+aitestkit feedback reject tests/generated/test_auth_login.py \
+  --reason "Missing edge case for locked account" \
+  --category missing_edge_cases
+
+# 9. View available frameworks
 aitestkit frameworks --list
 
-# 8. Check configuration
+# 10. Check configuration
 aitestkit info
 ```
 
@@ -2532,6 +3005,7 @@ aitestkit info
 |---------|------|--------|---------|
 | 1.0 | 2026-01-03 | QA Team | Initial specification |
 | 2.0 | 2026-01-11 | QA Team | Consolidated all docs, added GitHub Actions, feedback loop |
+| 3.0 | 2026-01-19 | QA Team | Docker-only distribution, mandatory YAML scenarios, Memvid core, schema versioning, error handling |
 
 ---
 
@@ -2541,6 +3015,7 @@ aitestkit info
 - AITestKit_MultiFramework_Update_Prompt.md
 - AITestKit_Complete_Specification.md
 - docs/IMPLEMENTATION_ROADMAP.md
+- AITESTKIT_CLAUDE_CODE_PROMPT.md (used as source for v3.0)
 
 **These files should be archived or deleted after MASTER_SPEC.md is committed.**
 

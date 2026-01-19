@@ -35,6 +35,12 @@ dependencies = [
 
     # Template rendering
     "jinja2>=3.1.0",
+
+    # Retry logic (for API calls)
+    "tenacity>=8.2.0",
+
+    # Memvid (semantic memory) - Phase 4
+    # "memvid>=0.1.0",  # TODO: Uncomment when available on PyPI
 ]
 
 [project.optional-dependencies]
@@ -94,7 +100,11 @@ build-backend = "setuptools.build_meta"
 where = ["src"]
 
 [tool.setuptools.package-data]
-aitestkit = ["prompts/**/*.md", "prompts/**/*.yaml"]
+aitestkit = [
+    "prompts/**/*.md",
+    "prompts/**/*.yaml",
+    "scenario/templates/*.yaml",
+]
 
 # Ruff configuration
 [tool.ruff]

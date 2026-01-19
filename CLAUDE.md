@@ -16,17 +16,21 @@ Core principle: AI generates, human reviews and approves. AI does not self-learn
 ## Quick Reference
 
 ```bash
-# Install
-pip install -e ".[dev]"
+# Install (Docker-based distribution)
+curl -fsSL https://raw.githubusercontent.com/sefaertunc/aitestkit/main/scripts/install.sh | bash
 
-# Development
+# Development (local)
+pip install -e ".[dev]"
 pytest tests/ -v                    # Run tests
 ruff check src/ tests/              # Lint
 mypy src/                           # Type check
 black src/ tests/                   # Format
 
 # CLI (requires ANTHROPIC_API_KEY)
-aitestkit generate "Test scenario" -f pytest
+aitestkit scenario init login.yaml           # Create scenario template
+aitestkit scenario validate scenarios/*.yaml # Validate scenarios
+aitestkit generate -s scenarios/login.yaml -f pytest  # Generate tests
+aitestkit feedback approve tests/generated/test_login.py
 aitestkit analyze ./failed_test.log
 aitestkit regression --all
 aitestkit info
@@ -38,10 +42,23 @@ aitestkit info
 src/aitestkit/
 ├── cli.py                 # Click-based CLI entry point
 ├── config.py              # Pydantic configuration
-├── utils/claude_client.py # Anthropic API wrapper
+├── errors.py              # Error definitions and exit codes
+├── scenario/              # Scenario YAML handling
+│   ├── loader.py          # Load and parse scenarios
+│   ├── validator.py       # Three-tier validation
+│   └── migrator.py        # Schema migration
 ├── generator/             # Test code generation (Opus 4.5)
+│   └── scot.py            # SCoT prompting
 ├── analyzer/              # Failure analysis (Sonnet 4.5)
 ├── regression/            # Prompt regression testing (Haiku 4.5)
+├── feedback/              # Feedback storage system
+│   ├── storage.py         # Memvid + JSON fallback
+│   └── patterns.py        # Pattern detection
+├── memory/                # Semantic memory (Memvid)
+│   ├── memvid_store.py    # Vector database
+│   └── retrieval.py       # CEDAR-style retrieval
+├── judge/                 # LLM-as-Judge validation
+├── utils/claude_client.py # Anthropic API wrapper
 └── prompts/               # Prompt templates and benchmarks
 ```
 
@@ -95,9 +112,10 @@ chore: update anthropic dependency to 0.41.0
 ## Environment Variables
 
 - `ANTHROPIC_API_KEY` - Required for Claude API access
-- `AITESTKIT_PROMPTS_DIR` - Override prompts directory
-- `AITESTKIT_OUTPUT_DIR` - Override output directory
-- `AITESTKIT_DEFAULT_FRAMEWORK` - Default framework (pytest/robot/playwright)
+- `AITESTKIT_LOG_LEVEL` - Logging level (DEBUG, INFO, WARNING, ERROR)
+- `AITESTKIT_MODEL_CODE_GEN` - Override code generation model
+- `AITESTKIT_MODEL_ANALYSIS` - Override analysis model
+- `AITESTKIT_MODEL_REGRESSION` - Override regression model
 
 ## Project Documentation
 
@@ -120,7 +138,7 @@ This comprehensive document includes:
 
 **[docs/BACKLOG.md](docs/BACKLOG.md)** - GitHub issue-style feature backlog extracted from MASTER_SPEC.md.
 
-Track implementation progress for all 29 features across 4 priority levels.
+Track implementation progress for all 40 features across 4 priority levels (P0-P3).
 
 ### Implementation Guidance
 
