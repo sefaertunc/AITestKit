@@ -209,3 +209,4 @@ __marimo__/
 # Development artifacts (local only, not part of official test suite)
 .dev-tests
 .dev-memory
+.dev-docs

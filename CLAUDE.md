@@ -121,7 +121,7 @@ chore: update anthropic dependency to 0.41.0
 
 ### Primary Specification
 
-**[docs/MASTER_SPEC.md](docs/MASTER_SPEC.md)** - The single source of truth for the project.
+**[.dev-docs/MASTER_SPEC.md](.dev-docs/MASTER_SPEC.md)** - The single source of truth for the project (gitignored, local only).
 
 This comprehensive document includes:
 - Vision and mission statements
@@ -136,13 +136,13 @@ This comprehensive document includes:
 
 ### Feature Backlog
 
-**[docs/BACKLOG.md](docs/BACKLOG.md)** - GitHub issue-style feature backlog extracted from MASTER_SPEC.md.
+**[.dev-docs/BACKLOG.md](.dev-docs/BACKLOG.md)** - GitHub issue-style feature backlog extracted from MASTER_SPEC.md (gitignored, local only).
 
 Track implementation progress for all 40 features across 4 priority levels (P0-P3).
 
 ### Implementation Guidance
 
-**[docs/development/claude/SKILL.md](docs/development/claude/SKILL.md)** - Detailed implementation guidance.
+**[.dev-docs/SKILL.md](.dev-docs/SKILL.md)** - Detailed implementation guidance (gitignored, local only).
 
 This includes:
 - Complete class structures and method signatures
