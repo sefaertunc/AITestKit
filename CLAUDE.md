@@ -78,6 +78,41 @@ src/aitestkit/
 - Test frameworks: pytest, Robot Framework, Playwright
 - Generated code must NOT contain: `time.sleep`, `TODO`, `pass  #`
 
+## Commenting Strategy
+
+**Core principle: Comments explain WHY, not WHAT.** If code needs a comment to explain what it does, refactor the code instead.
+
+### What to Comment
+
+| Type | When | Example |
+|------|------|---------|
+| Docstrings | Public APIs only | `"""Load scenario from YAML file."""` |
+| Why comments | Non-obvious decisions, workarounds | `# Retry: API has transient failures` |
+| Warnings | Gotchas, side effects | `# WARNING: Mutates input dict` |
+| TODO/FIXME | With issue reference only | `# TODO(#42): Add retry logic` |
+
+### What NOT to Comment
+
+```python
+# BAD - States the obvious
+self.client = Anthropic()  # Create Anthropic client
+if not api_key:  # Check if API key is missing
+    raise ValueError("API key required")  # Raise error
+
+# GOOD - Code is self-explanatory
+self.client = Anthropic()
+if not api_key:
+    raise ValueError("API key required")
+```
+
+### Rules
+
+1. **No obvious comments** - Don't describe what code does
+2. **No inline comments on simple lines** - `x = 5  # Set x to 5` is noise
+3. **No commented-out code** - Use git history
+4. **Docstrings for public API only** - Private helpers rarely need them
+5. **Update or delete** - Outdated comments are worse than none
+
 ## Git Commit Convention
 
 Follow [Conventional Commits](https://www.conventionalcommits.org/) format:

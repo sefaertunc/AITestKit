@@ -21,9 +21,9 @@ class UsageStats:
     # Pricing per 1M tokens (as of January 2025)
     # Source: https://www.anthropic.com/pricing
     PRICING = {
-        "opus": {"input": 5.00, "output": 25.00},  # Claude Opus 4.5
-        "sonnet": {"input": 3.00, "output": 15.00},  # Claude Sonnet 4.5
-        "haiku": {"input": 1.00, "output": 5.00},  # Claude Haiku 4.5
+        "opus": {"input": 5.00, "output": 25.00},
+        "sonnet": {"input": 3.00, "output": 15.00},
+        "haiku": {"input": 1.00, "output": 5.00},
     }
 
     @property
@@ -37,8 +37,6 @@ class UsageStats:
             Uses average pricing across all models. For per-model cost,
             multiply tokens by specific model pricing from PRICING dict.
         """
-        # Cost = (tokens / 1M) * price_per_1M
-        # Using average across Opus 4.5, Sonnet 4.5, and Haiku 4.5
         avg_input_price = (
             self.PRICING["opus"]["input"] + self.PRICING["sonnet"]["input"] + self.PRICING["haiku"]["input"]) / 3
         avg_output_price = (self.PRICING["opus"]["output"] + self.PRICING["sonnet"]["output"] + self.PRICING["haiku"]["output"]) / 3
@@ -95,7 +93,6 @@ class ClaudeClient:
             messages=[{"role": "user", "content": user_prompt}],
         )
 
-        # Update usage statistics
         usage = self._usage[model_type]
         usage.input_tokens += response.usage.input_tokens
         usage.output_tokens += response.usage.output_tokens
@@ -168,7 +165,6 @@ class ClaudeClient:
         if model_type is not None:
             return self._usage[model_type]
 
-        # Return combined stats for all models
         total = UsageStats()
         for stats in self._usage.values():
             total = total + stats

@@ -6,12 +6,10 @@ import yaml
 from pydantic import BaseModel, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-# Model ID constants
 OPUS_MODEL = "claude-opus-4-5-20251101"
 SONNET_MODEL = "claude-sonnet-4-5-20250929"
 HAIKU_MODEL = "claude-haiku-4-5-20251001"
 
-# Type alias for model selection
 ModelType = Literal["opus", "sonnet", "haiku"]
 
 class Settings(BaseSettings):
@@ -69,7 +67,6 @@ def get_settings() -> Settings:
     return Settings()
 
 
-# Project configuration models for .aitestkit/project.yaml
 class ProductConfig(BaseModel):
     """Product-level configuration."""
 
