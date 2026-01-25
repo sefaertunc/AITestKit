@@ -27,13 +27,16 @@ mypy src/                           # Type check
 black src/ tests/                   # Format
 
 # CLI (requires ANTHROPIC_API_KEY)
+aitestkit init                               # Initialize project
 aitestkit scenario init login.yaml           # Create scenario template
 aitestkit scenario validate scenarios/*.yaml # Validate scenarios
 aitestkit generate -s scenarios/login.yaml -f pytest  # Generate tests
 aitestkit feedback approve tests/generated/test_login.py
 aitestkit analyze ./failed_test.log
 aitestkit regression --all
-aitestkit info
+aitestkit frameworks --list                  # List supported frameworks
+aitestkit memory search "login auth"         # Search past generations
+aitestkit info                               # Show configuration
 ```
 
 ## Architecture
