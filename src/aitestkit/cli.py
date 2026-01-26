@@ -28,7 +28,13 @@ def info() -> None:
     ),
     help="Filter frameworks by category.",
 )
-def frameworks(list_all: bool, category: str | None) -> None:
+@click.option(
+    "--language",
+    "-l",
+    type=str,
+    help="Filter frameworks by programming language.",
+)
+def frameworks(list_all: bool, category: str | None, language: str | None) -> None:
     """Manage supported testing frameworks."""
     if list_all:
         table = format_framework_table()
@@ -43,3 +49,11 @@ def frameworks(list_all: bool, category: str | None) -> None:
         except ValueError:
             click.echo(f"Invalid category: {category}", err=True)
             raise click.Abort() from None
+    elif language:
+        frameworks = list_frameworks(language=language)
+        if not frameworks:
+            click.echo(f"No frameworks found for language: {language}", err=True)
+            raise SystemExit(2)
+        click.echo(f"Frameworks for language '{language}':")
+        for fw in frameworks:
+            click.echo(f" - {fw.name}")
